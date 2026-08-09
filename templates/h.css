@@ -1,0 +1,15 @@
+     body { font-family: sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
+        input[type="text"] { width: 80%; padding: 10px; margin-bottom: 20px; font-size: 16px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; font-size: 16px; background-color: #000000; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #333333; }
+        .result { margin-top: 20px; font-size: 24px; font-weight: bold; }
+        .safe { color: #28a745; }
+        .phishing { color: #dc3545; }
+        
+        /* Stats Box */
+        .stats-container { margin-top: 5px; text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; }
+        .bar-label { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        .bar-bg { width: 100%; background-color: #e9ecef; height: 18px; border-radius: 9px; overflow: hidden; margin-bottom: 15px; }
+        .bar-fill-phish { height: 100%; background-color: #dc3545; }
+        .bar-fill-safe { height: 100%; background-color: #28a745; }

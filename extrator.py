@@ -1,0 +1,42 @@
+import re
+from urllib.parse import urlparse
+
+def extract_features(url):
+    """
+    Converts a raw URL string into a list of numerical features 
+    that a machine learning model can understand.
+    """
+    # 1. URL Length (Phishing URLs are often very long to hide the real domain)
+    url_length = len(url)
+    
+    # 2. Number of dots (More dots usually means suspicious subdomains)
+    num_dots = url.count('.')
+    
+    # 3. Presence of '@' symbol (Used by attackers to mask the real destination)
+    # We assign 1 for True (exists), 0 for False
+    has_at_symbol = 1 if '@' in url else 0
+    
+    # 4. Check if an IP address is used instead of a normal domain name
+    try:
+        # urlparse separates the domain from the rest of the link
+        domain = urlparse(url).netloc
+        # Regular expression to check if the domain looks like an IPv4 address
+        has_ip = 1 if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", domain) else 0
+    except:
+        domain = ""
+        has_ip = 0
+        
+    # 5. Presence of a hyphen in the domain (Often used in fakes like paypal-update.com)
+    has_hyphen = 1 if '-' in domain else 0
+
+    # Return the exact features as a structured list of numbers
+    return [url_length, num_dots, has_at_symbol, has_ip, has_hyphen]
+
+# Let's test the script!
+if __name__ == "__main__":
+    test_safe_url = "https://www.google.com"
+    test_phish_url = "http://192.168.1.1/paypal-update-login@scam.com"
+    
+    print(f"Safe URL Math: {extract_features(test_safe_url)}")
+    print(f"Phishing URL Math: {extract_features(test_phish_url)}")
+

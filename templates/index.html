@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phishing URL Scanner</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin: 0; padding: 0; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: 50px auto 0; background: white; padding: 30px; border-radius: 20px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
+        input[type="text"] { width: 80%; padding: 10px; margin-bottom: 20px; font-size: 16px; border: 1px solid #ccc; border-radius: 15px; }
+        button { padding: 10px 20px; font-size: 16px; background-color: #000000; color: white; border: none; border-radius: 15px; cursor: pointer; }
+        button:hover { background-color: #333333; }
+        .result { margin-top: 20px; font-size: 24px; font-weight: bold; }
+        .safe { color: #28a745; }
+        .phishing { color: #dc3545; }
+        
+        /* Stats Box */
+        .stats-container { margin-top: 25px; text-align: left; background: #f8f9fa; padding: 15px; border-radius: 15px; }
+        .bar-label { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        .bar-bg { width: 100%; background-color: #e9ecef; height: 18px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; }
+        .bar-fill-phish { height: 100%; background-color: #dc3545; }
+        .bar-fill-safe { height: 100%; background-color: #28a745; }
+        
+        /* Navbar */
+        .navbar { background-color: #086bed; width: 98%; padding: 15px 0; box-shadow: 0px 2px 5px rgba(0,0,0,0.1); margin: 10px auto; border-radius: 20px; }
+        .navbar-content { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar-brand { color: white; font-size: 24px; font-weight: bold; text-decoration: none; }
+        .navbar-links { display: flex; gap: 30px; }
+        .navbar-links a { color: white; text-decoration: none; font-size: 16px; transition: all 0.3s; padding: 5px 10px; cursor: pointer; }
+        .navbar-links a:hover { color: white; background-color: #000000; border-radius: 5px; }
+        
+        /* Contact Modal */
+        .contact-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.2); }
+        .contact-modal.active { display: block; }
+        .contact-content { position: fixed; top: 70px; right: 20px; background-color: white; padding: 40px; border-radius: 20px; text-align: center; max-width: 400px; box-shadow: 0px 8px 20px rgba(0,0,0,0.2); z-index: 1001; }
+        .contact-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; }
+        .contact-info { margin: 15px 0; font-size: 16px; }
+        .contact-info strong { color: #086bed; }
+        .close-contact { position: absolute; top: 20px; right: 30px; font-size: 28px; font-weight: bold; cursor: pointer; color: #000; }
+        .close-contact:hover { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="#" class="navbar-brand">Phishing Scanner</a>
+            <div class="navbar-links">
+                <a href="#about">About</a>
+                <a onclick="openContact()">Contact</a>
+                <a href="#help">Help</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h2>🔍 Phishing URL Scanner</h2>
+        <form method="POST">
+            <input type="text" name="url" placeholder="Paste a URL here..." required value="{{ url }}">
+            <br>
+            <button type="submit">Scan Link</button>
+        </form>
+
+        {% if result %}
+            <div class="result {% if phish_prob > 50 %}phishing{% else %}safe{% endif %}">
+                {{ result }}
+            </div>
+
+            <div class="stats-container">
+                <div class="bar-label">🚨 Phishing Risk: {{ phish_prob }}%</div>
+                <div class="bar-bg">
+                    <div class="bar-fill-phish" style="width: {{ phish_prob }}%;"></div>
+                </div>
+
+                <div class="bar-label">✅ Legitimate Chance: {{ safe_prob }}%</div>
+                <div class="bar-bg">
+                    <div class="bar-fill-safe" style="width: {{ safe_prob|default(0) }}%;"></div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Contact Modal -->
+    <div class="contact-modal" id="contactModal">
+        <span class="close-contact" onclick="closeContact()">&times;</span>
+        <div class="contact-content">
+            <img src="{{ url_for('static', filename='v.jpeg') }}" alt="Profile Photo" class="contact-photo">
+            <h2>Contact Us</h2>
+            <div class="contact-info">
+                <strong>Email:</strong><br>
+                vishnunarayanan@gmail.com
+            </div>
+            <div class="contact-info">
+                <strong>Phone:</strong><br>
+                +91 79042 96570
+            </div>
+            <div class="contact-info">
+                <strong>Location:</strong><br>
+                Naal Road, Kuruku Sandhu, Tamil Nadu, India
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openContact() {
+            document.getElementById('contactModal').classList.add('active');
+        }
+        
+        function closeContact() {
+            document.getElementById('contactModal').classList.remove('active');
+        }
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            var modal = document.getElementById('contactModal');
+            if (event.target == modal) {
+                modal.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
