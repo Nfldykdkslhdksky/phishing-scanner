@@ -1,43 +1,27 @@
-from flask import Flask, render_template, request
+import pandas as pd
 import joblib
-from extractor import extract_features
+from sklearn.ensemble import RandomForestClassifier
+from extractor import extract_features 
 
-app = Flask(__name__)
+print("1. Loading dataset...")
+df = pd.read_csv('dataset.csv')
+df = df.sample(50000, random_state=42)
 
-print("Loading AI model into memory...")
-model = joblib.load('phishing_model.pkl')
+print("2. Extracting features from CSV... (This takes a few minutes!)")
+features_list = df['url'].apply(extract_features).tolist()
 
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    result = None
-    phish_prob = None
-    safe_prob = None
-    url_input = ""
-    
-    if request.method == 'POST':
-        url_input = request.form['url']
-        features = extract_features(url_input)
-        
-        # predict_proba gives probabilities for [Class 0, Class 1]
-        # Class 0 = Phishing, Class 1 = Safe
-        probabilities = model.predict_proba([features])[0]
-        
-        # Convert to percentage and round to 1 decimal place
-        phish_prob = round(probabilities[0] * 100, 1)
-        safe_prob = round(probabilities[1] * 100, 1)
-        
-        if phish_prob > 50:
-            result = "🚨 DANGER: PHISHING DETECTED!"
-        else:
-            result = "✅ LIKELY SAFE"
-            
-    return render_template(
-        'index.html', 
-        result=result, 
-        phish_prob=phish_prob, 
-        safe_prob=safe_prob, 
-        url=url_input
-    )
+# The updated 8 columns!
+X = pd.DataFrame(features_list, columns=[
+    'url_length', 'num_dots', 'has_at_symbol', 'has_ip', 'has_hyphen', 
+    'has_suspicious_word', 'is_shortened', 'is_https'
+])
 
-if __name__ == '__main__':
-    app.run(debug=True)
+y = df['status'] 
+
+print("3. Training the Random Forest AI model...")
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X, y)
+
+print("4. Saving the model for the web interface...")
+joblib.dump(model, 'phishing_model.pkl')
+print("✅ Saved successfully as 'phishing_model.pkl'!")
