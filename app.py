@@ -19,7 +19,7 @@ def home():
         
         # --- THE NEW WHITELIST ---
         trusted_domains = ['instagram.com', 'google.com', 'youtube.com', 'github.com', 'wikipedia.org',# --- THE EXPANDED WHITELIST ---
-        trusted_domains = [
+        
             # Search & Tech Giants
             'google.com', 'microsoft.com', 'apple.com', 'amazon.com', 'yahoo.com',
             
@@ -35,7 +35,7 @@ def home():
             
             # Gaming Networks
             'hoyoverse.com', 'hoyolab.com', 'rockstargames.com', 'krafton.com'
-        ]]
+        ]
         
         # Check if any trusted domain is inside the URL
         if any(domain in url_input.lower() for domain in trusted_domains):
