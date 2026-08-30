@@ -1,119 +1,596 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Phishing URL Scanner</title>
     <style>
-        body { font-family: sans-serif; text-align: center; margin: 0; padding: 0; background-color: #f4f4f9; }
-        .container { max-width: 600px; margin: 50px auto 0; background: white; padding: 30px; border-radius: 20px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
-        input[type="text"] { width: 80%; padding: 10px; margin-bottom: 20px; font-size: 16px; border: 1px solid #ccc; border-radius: 15px; }
-        button { padding: 10px 20px; font-size: 16px; background-color: #000000; color: white; border: none; border-radius: 15px; cursor: pointer; }
-        button:hover { background-color: #333333; }
-        .result { margin-top: 20px; font-size: 24px; font-weight: bold; }
-        .safe { color: #28a745; }
-        .phishing { color: #dc3545; }
-        
-        /* Stats Box */
-        .stats-container { margin-top: 25px; text-align: left; background: #f8f9fa; padding: 15px; border-radius: 15px; }
-        .bar-label { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
-        .bar-bg { width: 100%; background-color: #e9ecef; height: 18px; border-radius: 12px; overflow: hidden; margin-bottom: 15px; }
-        .bar-fill-phish { height: 100%; background-color: #dc3545; }
-        .bar-fill-safe { height: 100%; background-color: #28a745; }
-        
-        /* Navbar */
-        .navbar { background-color: #086bed; width: 98%; padding: 15px 0; box-shadow: 0px 2px 5px rgba(0,0,0,0.1); margin: 10px auto; border-radius: 20px; }
-        .navbar-content { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
-        .navbar-brand { color: white; font-size: 24px; font-weight: bold; text-decoration: none; }
-        .navbar-links { display: flex; gap: 30px; }
-        .navbar-links a { color: white; text-decoration: none; font-size: 16px; transition: all 0.3s; padding: 5px 10px; cursor: pointer; }
-        .navbar-links a:hover { color: white; background-color: #000000; border-radius: 5px; }
-        
-        /* Contact Modal */
-        .contact-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.2); }
-        .contact-modal.active { display: block; }
-        .contact-content { position: fixed; top: 70px; right: 20px; background-color: white; padding: 40px; border-radius: 20px; text-align: center; max-width: 400px; box-shadow: 0px 8px 20px rgba(0,0,0,0.2); z-index: 1001; }
-        .contact-photo { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; }
-        .contact-info { margin: 15px 0; font-size: 16px; }
-        .contact-info strong { color: #086bed; }
-        .close-contact { position: absolute; top: 20px; right: 30px; font-size: 28px; font-weight: bold; cursor: pointer; color: #000; }
-        .close-contact:hover { color: #dc3545; }
+        :root {
+            --bg: #07111f;
+            --bg-soft: #0d1b2a;
+            --panel: rgba(15, 23, 42, 0.82);
+            --panel-strong: #101b2d;
+            --line: rgba(148, 163, 184, 0.2);
+            --text: #e5eefb;
+            --muted: #9db0ca;
+            --danger: #ff5c7d;
+            --danger-soft: rgba(255, 92, 125, 0.14);
+            --safe: #42d392;
+            --safe-soft: rgba(66, 211, 146, 0.12);
+            --accent: #7c9cff;
+            --accent-2: #68e1fd;
+            --shadow: 0 30px 60px rgba(2, 6, 23, 0.45);
+        }
+
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(124, 156, 255, 0.24), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(104, 225, 253, 0.18), transparent 30%),
+                linear-gradient(135deg, var(--bg), var(--bg-soft));
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            width: min(1200px, calc(100% - 32px));
+            margin: 22px auto 0;
+            padding: 18px 26px;
+            background: rgba(12, 20, 34, 0.72);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow);
+        }
+
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            text-decoration: none;
+            color: var(--text);
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .brand span {
+            color: var(--accent-2);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a,
+        .nav-links button {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--text);
+            padding: 10px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 0.96rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(124, 156, 255, 0.6);
+            box-shadow: 0 12px 26px rgba(124, 156, 255, 0.18);
+        }
+
+        .page-shell {
+            width: min(1200px, calc(100% - 32px));
+            margin: 32px auto 40px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 28px;
+            align-items: center;
+        }
+
+        .hero-copy {
+            padding: 12px 8px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: rgba(124, 156, 255, 0.12);
+            border: 1px solid rgba(124, 156, 255, 0.34);
+            color: var(--accent-2);
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-weight: 700;
+        }
+
+        h1 {
+            margin: 18px 0 12px;
+            font-size: clamp(2.2rem, 5vw, 4rem);
+            line-height: 1.05;
+            letter-spacing: -0.06em;
+        }
+
+        .hero-copy p {
+            margin: 0;
+            max-width: 620px;
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .scanner-panel,
+        .result-panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        .scanner-panel {
+            padding: 28px;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .badge {
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: rgba(124, 156, 255, 0.12);
+            color: var(--accent-2);
+            border: 1px solid rgba(104, 225, 253, 0.24);
+        }
+
+        .scan-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 18px;
+            padding: 0 14px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .input-wrap:focus-within {
+            border-color: rgba(124, 156, 255, 0.8);
+            box-shadow: 0 0 0 4px rgba(124, 156, 255, 0.12);
+        }
+
+        .input-wrap span {
+            font-size: 1.2rem;
+            opacity: 0.92;
+            margin-right: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 1.02rem;
+            padding: 18px 0;
+            outline: none;
+        }
+
+        input[type="text"]::placeholder {
+            color: #7d8ca6;
+        }
+
+        .scan-btn {
+            border: none;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            box-shadow: 0 18px 30px rgba(124, 156, 255, 0.32);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .scan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 36px rgba(124, 156, 255, 0.42);
+        }
+
+        .scan-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-panel {
+            margin-top: 28px;
+            padding: 28px;
+            animation: fadeIn 0.35s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .result-text {
+            margin: 0;
+            font-size: clamp(1.5rem, 2vw, 2.4rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .status-pill {
+            padding: 9px 14px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+
+        .status-pill.safe {
+            background: var(--safe-soft);
+            color: var(--safe);
+            border-color: rgba(66, 211, 146, 0.28);
+        }
+
+        .status-pill.danger {
+            background: var(--danger-soft);
+            color: var(--danger);
+            border-color: rgba(255, 92, 125, 0.24);
+        }
+
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .score-card {
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 42, 0.72);
+        }
+
+        .score-card h3 {
+            margin: 0 0 8px;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .score-card strong {
+            display: block;
+            font-size: clamp(1.9rem, 3vw, 2.5rem);
+            letter-spacing: -0.05em;
+        }
+
+        .score-card.danger strong { color: var(--danger); }
+        .score-card.safe strong { color: var(--safe); }
+
+        .meter-group {
+            display: grid;
+            gap: 18px;
+        }
+
+        .meter-item {
+            display: grid;
+            gap: 10px;
+        }
+
+        .meter-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+
+        .meter-track {
+            width: 100%;
+            height: 16px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.12);
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .meter-fill {
+            height: 100%;
+            border-radius: inherit;
+            transition: width 0.7s ease;
+        }
+
+        .meter-fill.danger { background: linear-gradient(90deg, #ff738f, var(--danger)); }
+        .meter-fill.safe { background: linear-gradient(90deg, #65d9a6, var(--safe)); }
+
+        .safe { color: var(--safe); }
+        .phishing { color: var(--danger); }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.68);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.active { display: flex; }
+
+        .contact-card {
+            position: relative;
+            width: min(430px, 100%);
+            background: rgba(9, 16, 29, 0.94);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            padding: 30px 24px 24px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            font-size: 1.6rem;
+            cursor: pointer;
+        }
+
+        .contact-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(124, 156, 255, 0.38);
+            margin-bottom: 18px;
+        }
+
+        .contact-card h3 {
+            margin: 0 0 18px;
+            font-size: 1.7rem;
+        }
+
+        .contact-list {
+            display: grid;
+            gap: 14px;
+            text-align: left;
+            margin-top: 8px;
+        }
+
+        .contact-item {
+            background: rgba(15, 23, 42, 0.72);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 16px 18px;
+            line-height: 1.55;
+        }
+
+        .contact-item strong {
+            display: block;
+            color: var(--accent-2);
+            margin-bottom: 4px;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .topbar-inner,
+            .result-header,
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .score-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .scanner-panel,
+            .result-panel {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-content">
-            <a href="#" class="navbar-brand">Phishing Scanner</a>
-            <div class="navbar-links">
+    <nav class="topbar">
+        <div class="topbar-inner">
+            <a href="#" class="brand">Phishing<span>Scanner</span></a>
+            <div class="nav-links">
                 <a href="#about">About</a>
-                <a onclick="openContact()">Contact</a>
+                <button type="button" onclick="openContact()">Contact</button>
                 <a href="#help">Help</a>
             </div>
         </div>
     </nav>
-    
-    <div class="container">
-        <h2>🔍 Phishing URL Scanner</h2>
-        <form method="POST">
-            <input type="text" name="url" placeholder="Paste a URL here..." required value="{{ url }}">
-            <br>
-            <button type="submit">Scan Link</button>
-        </form>
+
+    <div class="page-shell">
+        <section class="hero">
+            <div class="hero-copy">
+                <div class="eyebrow">AI Security Check</div>
+                <h1>Scan any URL before it becomes a threat.</h1>
+                <p>
+                    Detect suspicious phishing patterns quickly with a lightweight AI model that measures risk
+                    and highlights whether a link looks dangerous or trustworthy.
+                </p>
+            </div>
+
+            <div class="scanner-panel">
+                <div class="panel-header">
+                    <h2>URL Analyzer</h2>
+                    <span class="badge">Live</span>
+                </div>
+
+                <form method="POST" class="scan-form">
+                    <div class="input-wrap">
+                        <span>🔗</span>
+                        <input type="text" name="url" placeholder="Paste a URL to inspect" required value="{{ url }}" />
+                    </div>
+                    <button type="submit" class="scan-btn">Analyze URL</button>
+                </form>
+            </div>
+        </section>
 
         {% if result %}
-            <div class="result {% if phish_prob > 50 %}phishing{% else %}safe{% endif %}">
-                {{ result }}
+        <section class="result-panel">
+            <div class="result-header">
+                <p class="result-text {% if phish_prob > 50 %}phishing{% else %}safe{% endif %}">{{ result }}</p>
+                <span class="status-pill {% if phish_prob > 50 %}danger{% else %}safe{% endif %}">
+                    {% if phish_prob > 50 %}Threat Found{% else %}Secure{% endif %}
+                </span>
             </div>
 
-            <div class="stats-container">
-                <div class="bar-label">🚨 Phishing Risk: {{ phish_prob }}%</div>
-                <div class="bar-bg">
-                    <div class="bar-fill-phish" style="width: {{ phish_prob }}%;"></div>
+            <div class="score-grid">
+                <div class="score-card danger">
+                    <h3>Phishing Risk</h3>
+                    <strong>{{ phish_prob }}%</strong>
                 </div>
-
-                <div class="bar-label">✅ Legitimate Chance: {{ safe_prob }}%</div>
-                <div class="bar-bg">
-                    <div class="bar-fill-safe" style="width: {{ safe_prob|default(0) }}%;"></div>
+                <div class="score-card safe">
+                    <h3>Legitimate</h3>
+                    <strong>{{ safe_prob }}%</strong>
                 </div>
             </div>
+
+            <div class="meter-group">
+                <div class="meter-item">
+                    <div class="meter-label">
+                        <span>Risk Level</span>
+                        <span>{{ phish_prob }}%</span>
+                    </div>
+                    <div class="meter-track">
+                        <div class="meter-fill danger" style="width: {{ phish_prob }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="meter-item">
+                    <div class="meter-label">
+                        <span>Safe Score</span>
+                        <span>{{ safe_prob }}%</span>
+                    </div>
+                    <div class="meter-track">
+                        <div class="meter-fill safe" style="width: {{ safe_prob|default(0) }}%;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
         {% endif %}
     </div>
-    
-    <!-- Contact Modal -->
-    <div class="contact-modal" id="contactModal">
-        <span class="close-contact" onclick="closeContact()">&times;</span>
-        <div class="contact-content">
-            <img src="{{ url_for('static', filename='v.jpeg') }}" alt="Profile Photo" class="contact-photo">
-            <h2>Contact Us</h2>
-            <div class="contact-info">
-                <strong>Email:</strong><br>
-                vishnunarayanan@gmail.com
-            </div>
-            <div class="contact-info">
-                <strong>Phone:</strong><br>
-                +91 79042 96570
-            </div>
-            <div class="contact-info">
-                <strong>Location:</strong><br>
-                Naal Road, Kuruku Sandhu, Tamil Nadu, India
+
+    <div class="modal" id="contactModal" aria-hidden="true">
+        <div class="contact-card">
+            <button type="button" class="close-btn" onclick="closeContact()" aria-label="Close contact panel">&times;</button>
+            <img src="{{ url_for('static', filename='v.jpeg') }}" alt="Profile Photo" class="contact-photo" />
+            <h3>Contact Us</h3>
+            <div class="contact-list">
+                <div class="contact-item">
+                    <strong>Email</strong>
+                    vishnunarayanan@gmail.com
+                </div>
+                <div class="contact-item">
+                    <strong>Phone</strong>
+                    +91 79042 96570
+                </div>
+                <div class="contact-item">
+                    <strong>Location</strong>
+                    Naal Road, Kuruku Sandhu, Tamil Nadu, India
+                </div>
             </div>
         </div>
     </div>
-    
+
     <script>
+        const modal = document.getElementById('contactModal');
+
         function openContact() {
-            document.getElementById('contactModal').classList.add('active');
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
         }
-        
+
         function closeContact() {
-            document.getElementById('contactModal').classList.remove('active');
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
         }
-        
-        // Close modal when clicking outside of it
-        window.onclick = function(event) {
-            var modal = document.getElementById('contactModal');
-            if (event.target == modal) {
-                modal.classList.remove('active');
-            }
-        }
+
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal) closeContact();
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') closeContact();
+        });
     </script>
 </body>
 </html>
